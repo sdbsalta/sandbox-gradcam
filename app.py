@@ -67,3 +67,59 @@ if img_input:
     for i in range(top5_prob.size(0)):
         label = labels[top5_catid[i]]
         st.write(f"{i+1}. **{label}** — {top5_prob[i]*100:.2f}%")
+        
+# -------------------------------
+# 4. Grad-CAM Implementation
+# -------------------------------
+import matplotlib.pyplot as plt
+import torchvision
+
+if "top5_catid" in locals() and len(top5_catid) > 0:
+    target_class = top5_catid[0].item()
+
+    def generate_gradcam(model, img_tensor, target_class):
+        target_layer = model.layer4[-1].conv3  # Last conv layer in ResNet-50
+        activations, gradients = [], []
+
+        def forward_hook(module, input, output):
+            activations.append(output.detach())
+
+        def backward_hook(module, grad_in, grad_out):
+            gradients.append(grad_out[0].detach())
+
+        # Register hooks
+        handle_f = target_layer.register_forward_hook(forward_hook)
+        handle_b = target_layer.register_backward_hook(backward_hook)
+
+        # Forward + backward
+        output = model(img_tensor)
+        class_score = output[0, target_class]
+        model.zero_grad()
+        class_score.backward()
+
+        grad = gradients[0]
+        act = activations[0]
+        weights = grad.mean(dim=(2, 3), keepdim=True)
+        cam = (weights * act).sum(dim=1, keepdim=True)
+        cam = torch.relu(cam)
+        cam = torch.nn.functional.interpolate(cam, size=(224, 224), mode='bilinear', align_corners=False)
+        cam = cam.squeeze().cpu().numpy()
+        cam = (cam - cam.min()) / (cam.max() - cam.min() + 1e-8)
+
+        handle_f.remove()
+        handle_b.remove()
+        return cam
+
+    # Compute Grad-CAM
+    heatmap = generate_gradcam(model, input_tensor, target_class)
+
+    # Overlay heatmap
+    img_np = np.array(img.resize((224, 224))) / 255.0
+    heatmap_rgb = plt.get_cmap('jet')(heatmap)[..., :3]
+    overlay = 0.5 * img_np + 0.5 * heatmap_rgb
+    overlay = np.clip(overlay, 0, 1)
+
+    st.subheader("Grad-CAM Visualization:")
+    st.image(overlay, caption=f"Grad-CAM for: {labels[target_class]}")
+else:
+    st.warning("Upload an image first to see the Grad-CAM heatmap.")
