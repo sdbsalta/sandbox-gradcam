@@ -42,9 +42,9 @@ preprocess = transforms.Compose([
 # -------------------------------
 # 3. Streamlit UI
 # -------------------------------
-st.title("ResNet-50 ImageNet Classifier")
+st.title("Bone Category Classifier")
 
-st.write("Upload or capture an image to see what the ResNet-50 model predicts.")
+st.write("Upload or capture an image to see what the model classifies.")
 
 source = st.radio("Choose image source:", ["Upload", "Camera"])
 
