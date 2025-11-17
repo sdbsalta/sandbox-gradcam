@@ -136,24 +136,33 @@ st.header("Model Evaluation")
 test_folder = st.text_input("Enter the path to your test dataset folder (organized by class):", "dataset")
 
 if st.button("Evaluate Model"):
-    st.info("Evaluating model... please wait.")
+    # Create placeholders
+    status_placeholder = st.empty()
+    progress_placeholder = st.empty()
+
+    status_placeholder.info("Evaluating model... please wait.")
+    progress_bar = progress_placeholder.progress(0)
+
     try:
-        # Preprocess same as training
+        # Load dataset
         test_data = datasets.ImageFolder(test_folder, transform=preprocess)
         test_loader = torch.utils.data.DataLoader(test_data, batch_size=16, shuffle=False)
 
         y_true, y_pred = [], []
-        progress = st.progress(0)
         total = len(test_loader)
 
         with torch.no_grad():
-            for imgs, labels in test_loader:
+            for i, (imgs, labels) in enumerate(test_loader):
                 outputs = model(imgs)
                 preds = torch.argmax(outputs, dim=1)
                 y_true.extend(labels.numpy())
                 y_pred.extend(preds.numpy())
-                progress.progress((i + 1) / total)
+                progress_bar.progress((i + 1) / total)
 
+        status_placeholder.empty()
+        progress_placeholder.empty()
+
+        # Compute metrics
         acc = accuracy_score(y_true, y_pred)
         prec = precision_score(y_true, y_pred, average='macro', zero_division=0)
         rec = recall_score(y_true, y_pred, average='macro', zero_division=0)
@@ -165,6 +174,6 @@ if st.button("Evaluate Model"):
         col3.metric("Recall", f"{rec*100:.2f}%")
         col4.metric("F1 Score", f"{f1*100:.2f}%")
 
-        st.success("✅ Evaluation complete.")
+        st.success("Evaluation complete.")
     except Exception as e:
         st.error(f"Error during evaluation: {e}")
