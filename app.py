@@ -124,3 +124,47 @@ if "top5_catid" in locals() and len(top5_catid) > 0:
     st.image(overlay, caption=f"Grad-CAM for: {labels[target_class]}")
 else:
     st.warning("Upload an image first to see the Grad-CAM heatmap.")
+    
+# -------------------------------
+# 5. Model Evaluation (Accuracy, Precision, Recall, F1)
+# -------------------------------
+from torchvision import datasets
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+st.header("Model Evaluation")
+
+test_folder = st.text_input("Enter the path to your test dataset folder (organized by class):", "dataset")
+
+if st.button("Evaluate Model"):
+    st.info("Evaluating model... please wait.")
+    try:
+        # Preprocess same as training
+        test_data = datasets.ImageFolder(test_folder, transform=preprocess)
+        test_loader = torch.utils.data.DataLoader(test_data, batch_size=16, shuffle=False)
+
+        y_true, y_pred = [], []
+        progress = st.progress(0)
+        total = len(test_loader)
+
+        with torch.no_grad():
+            for imgs, labels in test_loader:
+                outputs = model(imgs)
+                preds = torch.argmax(outputs, dim=1)
+                y_true.extend(labels.numpy())
+                y_pred.extend(preds.numpy())
+                progress.progress((i + 1) / total)
+
+        acc = accuracy_score(y_true, y_pred)
+        prec = precision_score(y_true, y_pred, average='macro', zero_division=0)
+        rec = recall_score(y_true, y_pred, average='macro', zero_division=0)
+        f1 = f1_score(y_true, y_pred, average='macro', zero_division=0)
+
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Accuracy", f"{acc*100:.2f}%")
+        col2.metric("Precision", f"{prec*100:.2f}%")
+        col3.metric("Recall", f"{rec*100:.2f}%")
+        col4.metric("F1 Score", f"{f1*100:.2f}%")
+
+        st.success("✅ Evaluation complete.")
+    except Exception as e:
+        st.error(f"Error during evaluation: {e}")

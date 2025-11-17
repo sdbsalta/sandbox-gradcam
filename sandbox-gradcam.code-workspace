@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "sandbox-gradcam",
+			"path": "."
+		},
+		{
+			"name": "processed",
+			"path": "../../../../Downloads/processed"
+		}
+	],
+	"settings": {}
+}
