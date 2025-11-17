@@ -1,0 +1,9 @@
+Clavicula
+Cranium
+Femur
+Fibula
+Humerus
+Os coxae
+Radius
+Tibia
+Ulna

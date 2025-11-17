@@ -7,11 +7,14 @@ import numpy as np
 # -------------------------------
 # 1. Load pretrained model
 # -------------------------------
+from torchvision.models import efficientnet_b3, EfficientNet_B3_Weights
+
 @st.cache_resource
 def load_model():
-    model = models.resnet50(weights=None)
-    state_dict = torch.load("resnet50_imagenet.pth", map_location="cpu")
-    model.load_state_dict(state_dict)
+    model = efficientnet_b3(weights=None)
+    model.classifier[1] = torch.nn.Linear(model.classifier[1].in_features, 9)  # if 9-class
+    state_dict = torch.load("best_b3.pt", map_location="cpu")
+    model.load_state_dict(state_dict, strict=False)
     model.eval()
     return model
 
@@ -20,9 +23,7 @@ model = load_model()
 # Load ImageNet class names
 @st.cache_data
 def load_labels():
-    import urllib.request, json
-    url = "https://raw.githubusercontent.com/pytorch/hub/master/imagenet_classes.txt"
-    with urllib.request.urlopen(url) as f:
+    with open("classes.txt") as f:
         labels = [line.strip() for line in f.readlines()]
     return labels
 
@@ -78,7 +79,7 @@ if "top5_catid" in locals() and len(top5_catid) > 0:
     target_class = top5_catid[0].item()
 
     def generate_gradcam(model, img_tensor, target_class):
-        target_layer = model.layer4[-1].conv3  # Last conv layer in ResNet-50
+        target_layer = model.features[-1][0]
         activations, gradients = [], []
 
         def forward_hook(module, input, output):
