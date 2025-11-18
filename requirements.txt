@@ -6,6 +6,6 @@ numpy
 opencv-python
 matplotlib
 scikit-learn
-pytorch-grad-cam
+git+https://github.com/jacobgil/pytorch-grad-cam.git
 timm
 opencv-python-headless
