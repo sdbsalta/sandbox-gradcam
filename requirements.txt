@@ -6,3 +6,6 @@ numpy
 opencv-python
 matplotlib
 scikit-learn
+pytorch-grad-cam
+timm
+opencv-python-headless
