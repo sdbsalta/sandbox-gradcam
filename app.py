@@ -117,58 +117,9 @@ else:
 # -------------------------------
 # 7. Model Evaluation (Accuracy, Precision, Recall, F1)
 # -------------------------------
-from torchvision import datasets
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-st.header("Model Evaluation")
-
-test_folder = st.text_input("Enter the path to your test dataset folder (organized by class):", "dataset")
-
-if st.button("Evaluate Model"):
-    status_placeholder = st.empty()
-    progress_placeholder = st.empty()
-
-    status_placeholder.info("Evaluating model... please wait.")
-    progress_bar = progress_placeholder.progress(0)
-
-    try:
-        # Load dataset (same preprocessing)
-        test_data = datasets.ImageFolder(test_folder, transform=preprocess)
-        test_loader = torch.utils.data.DataLoader(test_data, batch_size=16, shuffle=False)
-
-        y_true, y_pred = [], []
-        total = len(test_loader)
-
-        with torch.no_grad():
-            for i, (imgs, labels) in enumerate(test_loader):
-                # Extract CNN features
-                features = feature_extractor(imgs.to(device))
-                features_np = features.cpu().numpy()
-
-                # Scale + classify using Random Forest
-                scaled_features = scaler.transform(features_np)
-                preds = rf_model.predict(scaled_features)
-
-                y_true.extend(labels.numpy())
-                y_pred.extend(preds)
-
-                progress_bar.progress((i + 1) / total)
-
-        status_placeholder.empty()
-        progress_placeholder.empty()
-
-        # Compute metrics
-        acc = accuracy_score(y_true, y_pred)
-        prec = precision_score(y_true, y_pred, average='macro', zero_division=0)
-        rec = recall_score(y_true, y_pred, average='macro', zero_division=0)
-        f1 = f1_score(y_true, y_pred, average='macro', zero_division=0)
-
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Accuracy", f"{acc*100:.2f}%")
-        col2.metric("Precision", f"{prec*100:.2f}%")
-        col3.metric("Recall", f"{rec*100:.2f}%")
-        col4.metric("F1 Score", f"{f1*100:.2f}%")
-
-        st.success("Evaluation complete.")
-    except Exception as e:
-        st.error(f"Error during evaluation: {e}")
+st.markdown("---")
+st.markdown(
+    "<p style='text-align: center; color: gray;'>Created by Maria Rafaela V. Pelagio, Sophia Danielle B. Salta, Veneza Vielle V. Vergara</p>",
+    unsafe_allow_html=True
+)
