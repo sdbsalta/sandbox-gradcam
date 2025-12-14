@@ -3,7 +3,6 @@ torch
 torchvision
 pillow
 numpy
-opencv-python
 matplotlib
 scikit-learn
 git+https://github.com/jacobgil/pytorch-grad-cam.git
